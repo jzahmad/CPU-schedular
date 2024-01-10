@@ -7,9 +7,18 @@ typedef struct {
     char name[10];
     int arrTime;
     int burTime;
-    int remTime; // Only for NSJF && RR
+    int remTime;  // Only for NSJF && RR
+    int waitTime; // only for NSJF
 } TextData;
 
+// only for RR
+typedef struct{
+   char name[10];
+   int waitTime;
+   int remTime;
+}RRwait;
+
+// all used methods
 int compareByBurst(TextData a, TextData b);
 void swap(TextData* a, int i, int j);
 int compareByArrivalTime(const void* a, const void* b);
@@ -17,7 +26,7 @@ int compareByBurstTime(const void* a, const void* b);
 
 int main() {
     
-    FILE *output = fopen("Ouput.txt", "w");
+    FILE *output = fopen("Output.txt", "w");
     
     // This part will read the file and store data in a struct
 
@@ -25,10 +34,8 @@ int main() {
     TextData *data = NULL;
     int capacity = 4;  // initial capacity
     int size = 0; // this will be the size of tasks
-
     data = malloc(capacity * sizeof(TextData)); // this stores data for FCFS algorithm
     char line[32];
-
     while (fgets(line, sizeof(line), file) != NULL) {
         if (size == capacity) {
             capacity *= 2;
@@ -41,11 +48,9 @@ int main() {
     }
     fclose(file);
     
-    
-    
 
     // This is the execution of FCFS algorithm
-    fprintf(output,"FCFS: \n");
+    fprintf(output,"\nFCFS: \n");
     int waitTime[size];
     int currTime = 0;
     for (int i = 0; i < size; i++) {
@@ -54,10 +59,13 @@ int main() {
         } else {
             waitTime[i] = currTime;
         }
-        fprintf(output,"%s  %d  %d\n", data[i].name, currTime, currTime + data[i].burTime);
+        if(currTime>=10){
+            fprintf(output,"%s  %d  %d\n", data[i].name, currTime, currTime + data[i].burTime);
+        }else{
+            fprintf(output,"%s  %d   %d\n", data[i].name, currTime, currTime + data[i].burTime);
+        }
         currTime += data[i].burTime;
     }
-
     int totalTime = 0;
     for (int i = 0; i < size; i++) {
         fprintf(output,"Waiting time %s: %d\n", data[i].name, waitTime[i]);
@@ -68,109 +76,139 @@ int main() {
     
     
     
-    
-    
-    
     //This is the processing of RR
     fprintf(output,"\nRR: \n");
-    // data for RR
-    TextData* dataForRR = malloc(size * sizeof(TextData));
+    TextData* dataForRR = malloc(size * sizeof(TextData)); // data for RR
+    RRwait* waitForRR = malloc(size * sizeof(RRwait)); // wait for RR
+    
+    //initializing data
     for (int i = 0; i < size; i++) {
         strcpy(dataForRR[i].name, data[i].name);
         dataForRR[i].arrTime=data[i].arrTime;
         dataForRR[i].burTime=data[i].burTime;
         dataForRR[i].remTime=data[i].remTime;
+        strcpy(waitForRR[i].name, data[i].name);
+        waitForRR[i].waitTime=0;
+        waitForRR[i].remTime=data[i].burTime;
     }
     
-    int defaultTimeRR=4;
-    waitTime[size];
-    currTime = 0;
-    int completed = 0;
-    
-    for (int i = 0; i < size; i++) {
-        waitTime[i] = 0;
-    }
-    
-    int timeQuantum = 4; // Set the time quantum
-    
-    while (completed < size) {
-        for (int i = 0; i < size; i++) {
-            if (dataForRR[i].remTime > 0) {
-                int executeTime;
-                if (dataForRR[i].remTime < timeQuantum) {
-                    executeTime = dataForRR[i].remTime;
-                } else {
-                    executeTime = timeQuantum;
-                }
-                fprintf(output,"%s  %d  %d\n", dataForRR[i].name, currTime, currTime + executeTime);
-                dataForRR[i].remTime -= executeTime;
-                currTime += executeTime;
-    
-                if (dataForRR[i].remTime == 0) {
-                    completed++;
-                    waitTime[i] = currTime - dataForRR[i].arrTime - dataForRR[i].burTime;
+    int completed=0;
+    currTime=0;
+    int executeTime=0;
+    int timeQuantum = 4;
+    int newSize = size;
+    int index = 0;
+
+    while (completed<size) {
+        if (dataForRR[index].remTime > 0) {
+            if (dataForRR[index].remTime < timeQuantum) {
+                executeTime = dataForRR[index].remTime;
+            } else {
+                executeTime = timeQuantum;
+            }
+            if(currTime>=10){
+                fprintf(output,"%s  %d  %d\n", dataForRR[index].name, currTime, currTime + executeTime);
+            }else{
+                fprintf(output,"%s  %d   %d\n", dataForRR[index].name, currTime, currTime + executeTime);
+            }
+            
+            dataForRR[index].remTime -= executeTime;
+            currTime+=executeTime;
+            for (int i = 0; i < size; i++) {
+                if(strcmp(dataForRR[index].name,waitForRR[i].name)!=0 && waitForRR[i].remTime>0){
+                    waitForRR[i].waitTime += executeTime; 
+                }else if(strcmp(dataForRR[index].name, waitForRR[i].name) == 0){
+                    waitForRR[i].remTime-=executeTime;
                 }
             }
+            
         }
+        if (dataForRR[index].remTime !=0){
+            int insertIndex = -1;
+            for (int i = 0; i < newSize; i++) {
+                if (dataForRR[index].arrTime < dataForRR[i].arrTime && currTime < dataForRR[i].arrTime) {
+                    insertIndex = i;
+                    break;
+                }
+                insertIndex=newSize;
+            }
+            
+            if (insertIndex != -1) {
+                newSize += 1;
+                dataForRR = realloc(dataForRR, newSize * sizeof(TextData));
+                for (int j = newSize - 1; j > insertIndex; j--) {
+                    dataForRR[j] = dataForRR[j - 1];
+                }
+                dataForRR[insertIndex] = dataForRR[index];
+            }
+        }
+        if(dataForRR[index].remTime==0){
+            completed++;
+        }
+        index++;
     }
-    
     totalTime = 0;
     for (int i = 0; i < size; i++) {
-        fprintf(output,"Waiting time %s: %d\n", dataForRR[i].name, waitTime[i]);
-        totalTime += waitTime[i];
+        fprintf(output,"Waiting time %s: %d\n", waitForRR[i].name, waitForRR[i].waitTime-data[i].arrTime);
+        totalTime += waitForRR[i].waitTime-data[i].arrTime;
     }
     fprintf(output,"Average Waiting Time: %.2f\n", (float)totalTime / size);
+    
 
-    // This is the data for NSJF
-    TextData *data2 = malloc(size * sizeof(TextData));
-    for (int i = 0; i < size; i++) {
-        if (i == 0) {
-            strcpy(data2[i].name, data[i].name);
-            data2[i].arrTime = data[i].arrTime;
-            data2[i].burTime = data[i].burTime;
-        } else {
-            if(i+1<size){
-                if (compareByBurst(data[i], data[i + 1]) == 0) {
-                    swap(data, i, i + 1);
+
+    
+    // This is the execution of NSJF algorithm
+    TextData *data2 = malloc(size * sizeof(TextData));// This is the data for NSJF
+    waitTime[size];
+    int done = 0;
+    while (!done) {
+        done = 1;
+        for (int i = 0; i < size; i++) {
+            if (i == 0) {
+                strcpy(data2[i].name, data[i].name);
+                data2[i].arrTime = data[i].arrTime;
+                data2[i].burTime = data[i].burTime;
+            } else {
+                if(i+1<size){
+                    if (compareByBurst(data[i], data[i + 1]) == 0) {
+                        swap(data, i, i + 1);
+                        done = 0;
+                    }
                 }
+                strcpy(data2[i].name, data[i].name);
+                data2[i].arrTime = data[i].arrTime;
+                data2[i].burTime = data[i].burTime;
             }
-            strcpy(data2[i].name, data[i].name);
-            data2[i].arrTime = data[i].arrTime;
-            data2[i].burTime = data[i].burTime;
         }
     }
-    // This is the execution of NSJF algorithm
-    fprintf(output,"\n\nNSJF: \n");
+    fprintf(output,"\nNSJF: \n");
     currTime = 0;
     for (int i = 0; i < size; i++) {
         if (i != 0) {
-            waitTime[i] = currTime - data2[i].arrTime;
+            data2[i].waitTime = currTime - data2[i].arrTime;
         } else {
-            waitTime[i] = currTime;
+            data2[i].waitTime = currTime;
         }
-        fprintf(output,"%s  %d  %d\n", data2[i].name, currTime, currTime + data2[i].burTime);
+        if(currTime>=10){
+            fprintf(output,"%s  %d  %d\n", data2[i].name, currTime, currTime + data2[i].burTime);
+        }else{
+            fprintf(output,"%s  %d   %d\n", data2[i].name, currTime, currTime + data2[i].burTime);
+        }
         currTime += data2[i].burTime;
     }
     
-    qsort(data2, size, sizeof(TextData), compareByArrivalTime);
     totalTime = 0;
+    qsort(data2, size, sizeof(TextData), compareByArrivalTime);
     for (int i = 0; i < size; i++) {
-        fprintf(output,"Waiting time %s: %d\n", data2[i].name, waitTime[i]);
-        totalTime += waitTime[i];
+        fprintf(output,"Waiting time %s: %d\n", data2[i].name, data2[i].waitTime);
+        totalTime += data2[i].waitTime;
     }
     fprintf(output,"Average Waiting Time: %.2f\n", (float)totalTime / size);
-    
-    
-    
-    
-    
-    
-    
-    
+    qsort(data, size, sizeof(TextData), compareByArrivalTime);
     
     
     // this is PSJF
-    fprintf(output,"\n\nPSJF:\n");
+    fprintf(output,"\nPSJF:\n");
     int current_time = 0;
     completed = 0;
     int start = 0;
@@ -199,7 +237,11 @@ int main() {
             current_time++;
         } else {
             if (data[shortest].name != data[last].name) {
-                fprintf(output,"%s  %d   %d\n", data[last].name, start, current_time);
+                if(start>=10){
+                    fprintf(output,"%s  %d  %d\n", data[last].name, start, current_time);
+                }else{
+                    fprintf(output,"%s  %d   %d\n", data[last].name, start, current_time);
+                }
                 start = current_time;
             }
     
@@ -208,7 +250,11 @@ int main() {
             current_time++;
     
             if (current_time == totalTimeOfBurst) {
-                fprintf(output,"%s  %d   %d\n", data[last].name, start, current_time);
+                if(start>=10){
+                    fprintf(output,"%s  %d  %d\n", data[last].name, start, current_time);
+                }else{
+                    fprintf(output,"%s  %d   %d\n", data[last].name, start, current_time);
+                }
             }
     
             if (data[shortest].remTime == 0) {
@@ -230,18 +276,17 @@ int main() {
         fprintf(output,"Waiting time %s: %d\n", data[i].name, waitingTime[i]);
         totalTime += waitingTime[i];
     }
-    fprintf(output,"Average Waiting Time: %.2f\n", (float)totalTime / size);
-
+    fprintf(output,"Average Waiting Time: %.2f\n\n", (float)totalTime / size);
     
+    // Free memory for FCFS
+    free(data);
     
+    // Free memory for RR
+    free(dataForRR);
+    free(waitForRR);
     
-    
-    
-    
-    
-    
-    
-    
+    // Free memory for NSJF
+    free(data2);
 }
 
 int compareByBurst(TextData a, TextData b) {
@@ -283,4 +328,3 @@ int compareByBurstTime(const void* a, const void* b) {
         return 0;
     }
 }
-
