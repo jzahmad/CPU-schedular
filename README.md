@@ -1,7 +1,5 @@
 # CPU Scheduling Algorithms Implementation
 
-# CPU Scheduling Algorithms Implementation
-
 ## Overview
 This project implements several CPU scheduling algorithms including First Come First Serve (FCFS), Round Robin (RR), Non-Preemptive Shortest Job First (NSJF), and Preemptive Shortest Job First (PSJF). Each algorithm is implemented in C language and executed to demonstrate their performance.
 
