@@ -1,43 +1,78 @@
 # CPU Scheduling Algorithms Implementation
 
 ## Overview
-This project implements several CPU scheduling algorithms including First Come First Serve (FCFS), Round Robin (RR), Non-Preemptive Shortest Job First (NSJF), and Preemptive Shortest Job First (PSJF). Each algorithm is implemented in C language and executed to demonstrate their performance.
 
-## Setup and Installation
-- Clone the Repository: Clone this repository to your local machine using git clone https://github.com/yourusername/your-repository.git.
-- Compile the Code: Navigate to the project directory and compile the code using a C compiler. For example, if you're using GCC, run gcc CPUSche.c -o CPUSche.
-- Run the Executable: Execute the compiled program. For example, ./CPUSche.
+This project implements several CPU scheduling algorithms, providing a comparative analysis of their performance:
 
-## Features
-### FCFS
--Implements the First Come First Serve CPU scheduling algorithm.
--Demonstrates the execution sequence and waiting times for each process.
+- **First Come First Serve (FCFS):** Processes are executed in the order they arrive.
+- **Round Robin (RR):** Processes are given a fixed time quantum, and if they don't finish within that time, they are
+preempted and added to the back of the ready queue.
+- **Non-Preemptive Shortest Job First (NSJF):** The process with the shortest burst time is executed first. Preemption
+is not allowed.
+- **Preemptive Shortest Job First (PSJF):** The process with the shortest remaining burst time is executed first.
+Preemption is allowed.
 
-RR (Round Robin)
-- Implements the Round Robin CPU scheduling algorithm.
-- Allows customization of time quantum.
-- Displays the execution sequence and waiting times for each process.
+The code uses C language and stores process data in a `TextData` structure.
 
-NSJF (Non-Preemptive Shortest Job First)
-- Implements the Non-Preemptive Shortest Job First CPU scheduling algorithm.
-- Shows the execution sequence and waiting times for each process.
+## Tech Stack
 
-PSJF (Preemptive Shortest Job First)
-- Implements the Preemptive Shortest Job First CPU scheduling algorithm.
-- Provides visualization of the execution sequence and waiting times for each process.
+- **Language:** C
+- **Compiler:** GCC (or any other C compiler)
 
-## Usage
-- Upon running the program, it reads task specifications from TaskSpec.txt.
-- It generates an Output.txt file containing the execution details and waiting times for each algorithm.
+## Installation
 
-## Dependencies
-This project relies on standard C libraries and does not require any external dependencies.
+1. **Clone the repository:**
+```bash
+git clone https://github.com/yourusername/your-repository.git
+```
 
-## Known Issues
-None reported at the moment.
+2. **Compile the code:**
+```bash
+gcc CPUSche.c -o CPUSche
+```
 
-## Future Development Plans
-- Implement additional CPU scheduling algorithms.
-- Improve efficiency and readability of the code.
+## Running the Project
 
-## Sample Running
+1. **Prepare the TaskSpec.txt file:**
+- Create a file named `TaskSpec.txt`.
+- Each line in this file represents a process with the following format: `process_name,arrival_time,burst_time`.
+- For example:
+```
+P1,0,5
+P2,2,3
+P3,4,1
+P4,6,2
+```
+
+2. **Run the executable:**
+```bash
+./CPUSche
+```
+
+## Configuration Settings
+
+- **Time Quantum (RR):** The `timeQuantum` variable in the `main()` function determines the time quantum for the Round
+Robin algorithm. You can adjust this value as needed.
+
+## Testing
+
+1. **Run the program:** Execute the `CPUSche` executable as described above.
+2. **Check the Output.txt file:** The program generates an `Output.txt` file containing the results of each algorithm,
+including:
+- **Execution sequence:** The order in which processes are executed.
+- **Waiting times:** The time each process spends waiting in the ready queue.
+- **Average waiting time:** The average waiting time for all processes.
+
+## Contributing
+
+Contributions are welcome! Please follow these guidelines:
+
+1. **Fork the repository.**
+2. **Create a branch for your feature/fix.**
+3. **Commit your changes.**
+4. **Push to the branch.**
+5. **Open a pull request.**
+
+## Licensing
+
+This project is licensed under the MIT License. See the LICENSE file for details.
